@@ -1,89 +1,23 @@
-#sudo apt update
-#W: https://cloud.r-project.org/bin/linux/ubuntu/focal-cran40/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
-#E: The repository 'http://cran.rstudio.com/bin/linux/ubuntu jammy/ Release' does not have a Release file.
-#N: Updating from such a repository can't be done securely, and is therefore disabled by default.
-#N: See apt-secure(8) manpage for repository creation and user configuration details.
-
-#sudo apt-key list
-#Warning: apt-key is deprecated. Manage keyring files in trusted.gpg.d instead (see apt-key(8)).
-#/etc/apt/trusted.gpg
-#--------------------
-#pub   rsa2048 2010-10-19 [SCA] [expires: 2027-09-30]
-#      E298 A3A8 25C0 D65D FD57  CBB6 5171 6619 E084 DAB9
-#uid           [ unknown] Michael Rutter <marutter@gmail.com>
-#sub   rsa2048 2010-10-19 [E] [expires: 2027-09-30]
-
-#/etc/apt/trusted.gpg.d/anydesk.gpg
-#----------------------------------
-#pub   rsa2048 2017-12-19 [SC] [expires: 2025-12-16]
-      D563 11E5 FF3B 6F39 D5A1  6ABE 18DF 3741 CDFF DE29
-#uid           [ unknown] philandro Software GmbH <info@philandro.com>
-#sub   rsa2048 2017-12-19 [E] [expires: 2025-12-16]
-
-#/etc/apt/trusted.gpg.d/google-chrome.gpg
-#----------------------------------------
-#pub   rsa4096 2016-04-12 [SC]
-#      EB4C 1BFD 4F04 2F6D DDCC  EC91 7721 F63B D38B 4796
-#uid           [ unknown] Google Inc. (Linux Packages Signing Authority) <linux-packages-keymaster@google.com>
-#sub   rsa4096 2023-02-15 [S] [expires: 2026-02-14]
-#sub   rsa4096 2024-01-30 [S] [expires: 2027-01-29]
-
-#/etc/apt/trusted.gpg.d/linuxuprising-ubuntu-java.gpg
-#----------------------------------------------------
-#pub   rsa4096 2018-04-06 [SC]
-#      1CC3 D16E 460A 94EE 17FE  581C EA8C ACC0 73C3 DB2A
-#uid           [ unknown] Launchpad PPA for Linux Uprising
-
-#/etc/apt/trusted.gpg.d/microsoft.gpg
-#------------------------------------
-#pub   rsa2048 2015-10-28 [SC]
-#      BC52 8686 B50D 79E3 39D3  721C EB3E 94AD BE12 29CF
-#uid           [ unknown] Microsoft (Release signing) <gpgsecurity@microsoft.com>
-
-#/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg
-#------------------------------------------------------
-#pub   rsa4096 2012-05-11 [SC]
-#      8439 38DF 228D 22F7 B374  2BC0 D94A A3F0 EFE2 1092
-#uid           [ unknown] Ubuntu CD Image Automatic Signing Key (2012) <cdimage@ubuntu.com>
-
-#/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg
-#------------------------------------------------------
-#pub   rsa4096 2018-09-17 [SC]
-#      F6EC B376 2474 EDA9 D21B  7022 8719 20D1 991B C93C
-#uid           [ unknown] Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>
-
-#/etc/apt/trusted.gpg.d/ubuntu-toolchain-r-ubuntu-test.gpg
-#---------------------------------------------------------
-#pub   rsa1024 2009-10-22 [SC]
-#      60C3 1780 3A41 BA51 845E  371A 1E93 77A2 BA9E F27F
-#uid           [ unknown] Launchpad Toolchain builds
-
-#/etc/apt/trusted.gpg.d/webupd8team-ubuntu-y-ppa-manager.gpg
-#-----------------------------------------------------------
-#pub   rsa1024 2010-05-04 [SC]
-#      7B2C 3B08 89BF 5709 A105  D03A C251 8248 EEA1 4886
-#uid           [ unknown] Launchpad VLC
-
-sudo cp trusted.gpg trusted.gpg.d
+# Update and Upgrade the system #
 sudo apt update
-E: The repository 'http://cran.rstudio.com/bin/linux/ubuntu jammy/ Release' does not have a Release file.
-N: Updating from such a repository can't be done securely, and is therefore disabled by default.
-N: See apt-secure(8) manpage for repository creation and user configuration details.
+sudo apt upgrade
 
+# update indices
+sudo apt update -qq
 
-#Latest Version of R on Ubuntu Linux
-Add the following line to your software sources list (replacing trusty with precise, or lucid if appropriate). This can be accomplished by either (1) pasting the text into a new file called /etc/apt/sources.list.d/r-project.list, or (2) using the Third-Party Software tab in the System -> Administration -> Software Sources tool. For a repository closer to you, see this list of mirrors.
+# install two helper packages we need
+sudo apt install --no-install-recommends software-properties-common dirmngr
 
-` deb http://cran.stat.ucla.edu/bin/linux/ubuntu trusty/ `
+# add the signing key (by Michael Rutter) for these repos
+# To verify key, run gpg --show-keys /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc 
+# Fingerprint: E298A3A825C0D65DFD57CBB651716619E084DAB9
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
 
-Add the repository authentication key
+# add the R 4.0 repo from CRAN -- adjust 'focal' to 'groovy' or 'bionic' as needed
+sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
 
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+# install R and its dependencies #
+sudo apt install --no-install-recommends r-base
 
-Update your package list
-
-sudo apt-get update
-Install R and software to compile R add-on packages
-
-sudo apt-get install r-base r-base-dev
-Full instructions can be found at http://cran.r-project.org/bin/linux/ubuntu/README
+## set the .libPaths() to the location of libraries using #
+export R_LIBS_USER="~/R/x86_64-pc-linux-gnu-library/4.4"
